@@ -118,6 +118,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
     // read object ID from given index from given byte array
     protected final long objectIdAt(int index, byte[] data) {
         int idSize = getClazz().getIdentifierSize();
+        if (data.length < idSize) return 0l;
         if (idSize == 4) {
             return ((long)intAt(index, data)) & Snapshot.SMALL_ID_MASK;
         } else {
