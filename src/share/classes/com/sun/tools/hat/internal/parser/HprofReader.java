@@ -42,6 +42,7 @@ import com.sun.tools.hat.internal.model.*;
  * Object that's used to read a hprof file.
  *
  * @author      Bill Foote
+ *              Neville Grech added constPool support
  */
 
 public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes {
@@ -663,10 +664,19 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
 
         int numConstPoolEntries = in.readUnsignedShort();
         bytesRead += 2;
+        JavaThing[] constBin = new JavaThing[1];
+        JavaClassConstPoolEntry[] constPool = new JavaClassConstPoolEntry[numConstPoolEntries];
         for (int i = 0; i < numConstPoolEntries; i++) {
-            int index = in.readUnsignedShort(); // unused
-            bytesRead += 2;
-            bytesRead += readValue(null);       // We ignore the values
+            int index = in.readUnsignedShort();
+            bytesRead+=2;
+            byte type = in.readByte();
+            bytesRead++;
+            bytesRead += readValueForType(type, constBin);
+            if (version >= VERSION_JDK12BETA4) {
+                type = signatureFromTypeId(type);
+            }
+            String signature = "" + ((char) type);
+            constPool[i] = new JavaClassConstPoolEntry(index, signature, constBin[0]);
         }
 
         int numStatics = in.readUnsignedShort();
@@ -709,7 +719,7 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
             name = "unknown-name@" + toHex(id);
         }
         JavaClass c = new JavaClass(id, name, superId, classLoaderId, signersId,
-                                    protDomainId, fields, statics,
+                                    protDomainId, fields, statics, constPool,
                                     instanceSize);
         snapshot.addClass(id, c);
         snapshot.setSiteTrace(c, stackTrace);

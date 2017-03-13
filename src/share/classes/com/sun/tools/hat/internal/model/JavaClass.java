@@ -40,6 +40,7 @@ import com.sun.tools.hat.internal.parser.ReadBuffer;
 /**
  *
  * @author      Bill Foote
+ * @author      Neville Grech added constPool support
  */
 
 
@@ -60,6 +61,9 @@ public class JavaClass extends JavaHeapObject {
     // static fields
     private JavaStatic[] statics;
 
+    // constant pool
+    private JavaClassConstPoolEntry[] constPool;
+
     private static final JavaClass[] EMPTY_CLASS_ARRAY = new JavaClass[0];
     // my subclasses
     private JavaClass[] subclasses = EMPTY_CLASS_ARRAY;
@@ -79,7 +83,7 @@ public class JavaClass extends JavaHeapObject {
     public JavaClass(long id, String name, long superclassId, long loaderId,
                      long signersId, long protDomainId,
                      JavaField[] fields, JavaStatic[] statics,
-                     int instanceSize) {
+                     JavaClassConstPoolEntry[] constPool, int instanceSize) {
         this.id = id;
         this.name = name;
         this.superclass = new JavaObjectRef(superclassId);
@@ -88,15 +92,16 @@ public class JavaClass extends JavaHeapObject {
         this.protectionDomain = new JavaObjectRef(protDomainId);
         this.fields = fields;
         this.statics = statics;
+        this.constPool = constPool;
         this.instanceSize = instanceSize;
     }
 
     public JavaClass(String name, long superclassId, long loaderId,
                      long signersId, long protDomainId,
-                     JavaField[] fields, JavaStatic[] statics,
-                     int instanceSize) {
+                     JavaField[] fields, JavaStatic[] statics, 
+                     JavaClassConstPoolEntry[] constPool, int instanceSize) {
         this(-1L, name, superclassId, loaderId, signersId,
-             protDomainId, fields, statics, instanceSize);
+             protDomainId, fields, statics, constPool, instanceSize);
     }
 
     public final JavaClass getClazz() {
@@ -127,6 +132,10 @@ public class JavaClass extends JavaHeapObject {
 
         for (int i = 0; i < statics.length; i++) {
             statics[i].resolve(this, snapshot);
+        }
+
+        for (int i = 0; i < constPool.length; i++) {
+            constPool[i].resolve(this, snapshot);
         }
         snapshot.getJavaLangClass().addInstance(this);
         super.resolve(snapshot);
@@ -314,6 +323,10 @@ public class JavaClass extends JavaHeapObject {
 
     public JavaStatic[] getStatics() {
         return statics;
+    }
+
+    public JavaClassConstPoolEntry[] getConstPool() {
+        return constPool;
     }
 
     // returns value of static field of given name

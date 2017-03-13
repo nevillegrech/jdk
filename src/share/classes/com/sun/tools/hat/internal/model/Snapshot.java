@@ -40,6 +40,7 @@ import com.sun.tools.hat.internal.util.Misc;
 /**
  *
  * @author      Bill Foote
+ * @author      Neville Grech added constant pool support
  */
 
 /**
@@ -55,6 +56,7 @@ public class Snapshot {
 
     private static final JavaField[] EMPTY_FIELD_ARRAY = new JavaField[0];
     private static final JavaStatic[] EMPTY_STATIC_ARRAY = new JavaStatic[0];
+    private static final JavaClassConstPoolEntry[] EMPTY_CONSTPOOL_ARRAY = new JavaClassConstPoolEntry[0];
 
     // all heap objects
     private Hashtable<Number, JavaHeapObject> heapObjects =
@@ -197,7 +199,7 @@ public class Snapshot {
 
         // Create fake instance class
         JavaClass c = new JavaClass(name, 0, 0, 0, 0, fields,
-                                 EMPTY_STATIC_ARRAY, instSize);
+                          EMPTY_STATIC_ARRAY, EMPTY_CONSTPOOL_ARRAY, instSize);
         // Add the class
         addFakeClass(makeId(classID), c);
         return c;
@@ -240,21 +242,21 @@ public class Snapshot {
         if (javaLangClass == null) {
             System.out.println("WARNING:  hprof file does not include java.lang.Class!");
             javaLangClass = new JavaClass("java.lang.Class", 0, 0, 0, 0,
-                                 EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
+                                          EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, EMPTY_CONSTPOOL_ARRAY, 0);
             addFakeClass(javaLangClass);
         }
         javaLangString = findClass("java.lang.String");
         if (javaLangString == null) {
             System.out.println("WARNING:  hprof file does not include java.lang.String!");
             javaLangString = new JavaClass("java.lang.String", 0, 0, 0, 0,
-                                 EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
+                                           EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, EMPTY_CONSTPOOL_ARRAY, 0);
             addFakeClass(javaLangString);
         }
         javaLangClassLoader = findClass("java.lang.ClassLoader");
         if (javaLangClassLoader == null) {
             System.out.println("WARNING:  hprof file does not include java.lang.ClassLoader!");
             javaLangClassLoader = new JavaClass("java.lang.ClassLoader", 0, 0, 0, 0,
-                                 EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
+                                                EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, EMPTY_CONSTPOOL_ARRAY, 0);
             addFakeClass(javaLangClassLoader);
         }
 
@@ -534,7 +536,7 @@ public class Snapshot {
                 if (otherArrayType == null) {
                     addFakeClass(new JavaClass("[<other>", 0, 0, 0, 0,
                                      EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY,
-                                     0));
+                                     EMPTY_CONSTPOOL_ARRAY, 0));
                     otherArrayType = findClass("[<other>");
                 }
             }
@@ -548,7 +550,7 @@ public class Snapshot {
             clazz = findClass("[" + elementSignature);
             if (clazz == null) {
                 clazz = new JavaClass("[" + elementSignature, 0, 0, 0, 0,
-                                   EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
+                                      EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, EMPTY_CONSTPOOL_ARRAY, 0);
                 addFakeClass(clazz);
                 // This is needed because the JDK only creates Class structures
                 // for array element types, not the arrays themselves.  For
